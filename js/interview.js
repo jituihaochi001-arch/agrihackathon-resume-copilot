@@ -19,7 +19,8 @@
 
   function digest() {
     var out = [];
-    var m = window.App && window.App.state.base;
+    // 优先用「本次面试选择的简历」；明确选了「不使用简历」时不再回退到优化台的简历
+    var m = ST.resume ? ST.resume.model : (ST.noResume ? null : (window.App && window.App.state.base));
     if (m) {
       if (m.name) out.push('姓名：' + m.name);
       out.push('求职意向：' + (m.intent || '未填写'));
@@ -43,7 +44,7 @@
         });
       });
     }
-    var jd = (window.App && window.App.state.rawJd) || '';
+    var jd = ST.resume ? (ST.resume.jd || '') : (ST.noResume ? '' : ((window.App && window.App.state.rawJd) || ''));
     if (jd) out.push('\n【目标 JD】\n' + jd.slice(0, 1200));
     var txt = out.join('\n');
     if (txt.length > 4200) txt = txt.slice(0, 4200) + '\n（简历过长，已截断）';
@@ -148,11 +149,18 @@
 
     var st = window.App && window.App.state;
     var note = $('ivEmptyNote');
-    if (note) note.textContent = (st && st.base)
-      ? '已带入当前简历' + (st.rawJd ? '与 JD' : '') + '：' + (st.fileName || '未命名简历')
-      : '还没上传简历，只能按岗位出通用题；先去「我的简历」上传，题目会更贴合你。';
+    var pick = ST.resume;
+    if (note) {
+      if (pick) {
+        note.textContent = '已选择「' + (pick.title || ((pick.model && pick.model.name) ? pick.model.name + '的简历' : '这份简历')) + '」，出题会围绕这份简历';
+      } else if (st && st.base) {
+        note.textContent = '还没选简历，按岗位出通用题；点「配置并开始」可以从简历库挑一份';
+      } else {
+        note.textContent = '简历库还是空的：先上传或新建一份，题目会更贴合你';
+      }
+    }
     var startBtn = $('ivEmptyStart');
-    if (startBtn) startBtn.textContent = (st && st.base) ? '配置并开始 →' : '选岗位直接开练 →';
+    if (startBtn) startBtn.textContent = (pick || (st && st.base)) ? '配置并开始 →' : '选岗位直接开练 →';
 
     if ($('ivRound')) $('ivRound').textContent = '—';
     if ($('ivCtx')) $('ivCtx').textContent = '—';
@@ -198,9 +206,57 @@
     var app = window.App;
     var roleEl = $('ivRole');
     if (roleEl && app && app.state.jd && app.state.jd.title && !roleEl.value) roleEl.value = app.state.jd.title;
+    fillResumeOptions();
+    syncResumeHint();
     renderHistory();
-    $('ivStartHint').textContent = app && app.state.base ? '已带入当前简历与 JD' : '未上传简历：将只按岗位与轮次出题，无法深挖项目';
     app.openOverlay('ivStartOverlay');
+  }
+
+  /** 把简历库里的所有简历填进「面试简历」下拉框 */
+  function fillResumeOptions() {
+    var sel = $('ivResumeSel');
+    if (!sel) return;
+    var list = (window.ResumeLib && window.ResumeLib.list()) || [];
+    var html = '';
+    if (!list.length) {
+      html = '<option value="">简历库为空 · 仅按岗位出题</option>';
+    } else {
+      html = '<option value="">不使用简历（只按岗位出题）</option>' +
+        list.map(function (x) {
+          var label = x.title || (x.name ? x.name + '的简历' : '未命名简历');
+          if (x.name && label.indexOf(x.name) < 0) label += ' · ' + x.name;
+          return '<option value="' + esc(x.id) + '">' + esc(label) + '</option>';
+        }).join('');
+    }
+    sel.innerHTML = html;
+
+    // 优先保留上次的选择，其次优化台里的当前简历，最后取最新一份
+    var prefer = (ST.resume && ST.resume.id) || (window.App && window.App.state.docId) || '';
+    var ok = false;
+    for (var i = 0; i < list.length; i++) if (list[i].id === prefer) ok = true;
+    sel.value = ok ? prefer : (list.length ? list[0].id : '');
+  }
+
+  /** 下拉框变化 / 打开弹层时，更新「出题依据」提示 */
+  function syncResumeHint() {
+    var sel = $('ivResumeSel');
+    var id = sel ? sel.value : '';
+    var doc = (id && window.ResumeLib) ? window.ResumeLib.get(id) : null;
+    ST.resume = doc;
+
+    var name = '';
+    if (doc) {
+      name = doc.title || ((doc.model && doc.model.name) ? doc.model.name + '的简历' : '这份简历');
+    }
+    var hint;
+    if (doc) {
+      hint = '将基于「' + name + '」出题' +
+        (doc.jd ? '，并带上它的 JD' : ((window.App && window.App.state.rawJd) ? '，并带上当前 JD' : ''));
+    } else {
+      hint = '未选择简历：只按岗位与轮次出题，不会深挖项目';
+    }
+    if ($('ivStartHint')) $('ivStartHint').textContent = hint;
+    if ($('ivEmptyNote')) $('ivEmptyNote').textContent = doc ? ('已选择「' + name + '」') : '未选择简历';
   }
 
   function start() {
@@ -214,14 +270,22 @@
       timing: $('ivTiming').checked,
       deep: $('ivDeep').checked,
     };
-    if (!c.role && !app.state.base) {
-      $('ivStartHint').textContent = '没上传简历时，请至少填目标岗位，否则无法出题';
+    var rid = $('ivResumeSel') ? $('ivResumeSel').value : '';
+    var rdoc = (rid && window.ResumeLib) ? window.ResumeLib.get(rid) : null;
+    ST.resume = rdoc;
+    ST.noResume = !rdoc;
+    c.resumeId = rid;
+    c.resumeTitle = rdoc ? (rdoc.title || ((rdoc.model && rdoc.model.name) ? rdoc.model.name + '的简历' : '这份简历')) : '';
+    if (!c.role && !rdoc) {
+      $('ivStartHint').textContent = '请先选一份简历，或至少填目标岗位，否则无法出题';
       return;
     }
     ST.cfg = c;
     ST.phase = 'run';
     ST.log = [];
     ST.asked = 0;
+    ST.reviewAdded = 0;
+    ST.reviewTodo = 0;
     ST.startAt = Date.now();
     ST.qStartAt = Date.now();
     syncIdle();
@@ -332,9 +396,10 @@
     return '你是招聘负责人兼面试教练，正在为一场模拟面试写评分报告。严格只输出 JSON，不要任何其它文字，不要 ``` 包裹。\n\n' +
       '评分维度固定 5 项：专业深度、逻辑结构、表达清晰、岗位匹配、可信度（回答是否有真实细节支撑）。\n' +
       'total 为 0-100 整数；grade 为 A/B/C/D 之一；summary 为 80-120 字总评，先扬后抑。\n' +
-      'items 逐题给：q（原题）、a（回答要点摘要，30 字内）、strength（亮点，20 字内）、issue（最该改的一点，30 字内）、reference（参考答法，80 字内，可操作）。\n' +
+      'items 逐题给：q（原题）、a（回答要点摘要，30 字内；跳过就写空串）、score（0-100 整数，这题答得如何）、weak（true/false：明显没答上、跳过、或答得很空就给 true）、strength（亮点，20 字内）、issue（最该改的一点，30 字内）、reference（参考答法，80 字内，可操作）。\n' +
+      'items 必须覆盖上面记录的每一道题（含被跳过的题），顺序与原题一致，不能漏题；跳过的题也要给 reference。\n' +
       'actions 给 3 条立刻能做的改进动作；resumeTips 给 2 条简历补强建议，指出具体该补什么。\n' +
-      '输出结构：{"total":0,"grade":"B","summary":"","dims":[{"name":"","score":0,"comment":""}],"items":[{"q":"","a":"","strength":"","issue":"","reference":""}],"actions":[""],"resumeTips":[""]}';
+      '输出结构：{"total":0,"grade":"B","summary":"","dims":[{"name":"","score":0,"comment":""}],"items":[{"q":"","a":"","score":0,"weak":false,"strength":"","issue":"","reference":""}],"actions":[""],"resumeTips":[""]}';
   }
 
   function report() {
@@ -349,6 +414,16 @@
       ST.phase = 'report';
       syncIdle();
       saveHistory(j);
+      // 没答好的题自动进「面试总结」，方便之后对照参考答案复习
+      var rv = window.InterviewReview ? window.InterviewReview.collect(j, {
+        role: ST.cfg.role,
+        round: ST.cfg.round,
+        level: ST.cfg.level,
+        resume: ST.cfg.resumeTitle || '',
+        log: ST.log
+      }) : null;
+      ST.reviewAdded = rv ? rv.added : 0;
+      ST.reviewTodo = rv ? rv.total : 0;
       renderHub();
       renderReport(j);
       return closing();
@@ -388,6 +463,11 @@
       '<div class="rpt-head-r"><span class="rpt-grade">' + esc(j.grade || '—') + '</span>' +
       '<p class="rpt-role">' + esc(c.role || '通用岗位') + ' · ' + esc(c.round) + ' · ' + esc(c.level) + ' · ' + ST.log.length + ' 问 · 用时 ' + fmt(dur) + '</p>' +
       '<p class="rpt-summary">' + esc(j.summary || '') + '</p></div></div>';
+
+    if (ST.reviewAdded) {
+      html += '<div class="rpt-review-tip"><span>本次有 <b>' + ST.reviewAdded + '</b> 道没答好的题已存入「面试总结」，现在共 <b>' + ST.reviewTodo + '</b> 道待复习。</span>' +
+        '<button type="button" class="text-btn" data-go="review">去回顾 →</button></div>';
+    }
 
     html += '<div class="rpt-sec"><span class="block-label">五维评分</span><ul class="rpt-dims">' +
       (j.dims || []).map(function (d) {
@@ -469,6 +549,7 @@
         ST.cfg = { role: h[i].role, round: h[i].round, level: h[i].level, count: h[i].count, timing: true, deep: true };
         ST.log = []; ST.asked = h[i].qn || h[i].count || 0; ST.startAt = Date.now() - h[i].durSec * 1000;
         ST.report = h[i].report; ST.phase = 'report';
+        ST.reviewAdded = 0; ST.reviewTodo = 0;
         syncIdle();
         if (window.App && window.App.activateView) window.App.activateView('interview');
         $('ivRound').textContent = h[i].round + ' · ' + h[i].level;
@@ -564,6 +645,8 @@
     $('ivBack').addEventListener('click', function () { window.App.showWork(2); });
 
     $('ivBtnStart').addEventListener('click', start);
+    var rsel = $('ivResumeSel');
+    if (rsel) rsel.addEventListener('change', syncResumeHint);
     var emptyStart = $('ivEmptyStart');
     if (emptyStart) emptyStart.addEventListener('click', openStart);
     $('ivHistList').addEventListener('click', function (e) {
@@ -578,6 +661,12 @@
 
     $('ivBtnExportMd').addEventListener('click', exportMd);
     $('ivBtnPrint').addEventListener('click', printReport);
+    $('ivReportOverlay').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-go="review"]');
+      if (!b) return;
+      $('ivReportOverlay').hidden = true;
+      window.App.showReview();
+    });
     $('ivBtnAgain').addEventListener('click', function () {
       $('ivReportOverlay').hidden = true;
       openStart();

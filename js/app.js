@@ -95,6 +95,7 @@
     optimize:  { title: '简历优化', kicker: '02 / POLISH WORKBENCH', view: 'viewWork' },
     settings:  { title: 'API 设置', kicker: '03 / MODEL ACCESS', view: 'viewSettings' },
     interview: { title: '模拟面试', kicker: '04 / MOCK INTERVIEW', view: 'viewInterview' },
+    review:    { title: '面试总结', kicker: '05 / INTERVIEW REVIEW', view: 'viewReview' },
   };
 
   /** 只切左侧高亮与顶栏文案，不动视图（供 interview / ai 模块复用） */
@@ -152,6 +153,8 @@
         showSettings();
       } else if (rp === 'interview') {
         showInterview();
+      } else if (rp === 'review') {
+        showReview();
       } else {
         showUpload();
       }
@@ -184,12 +187,16 @@
       else b.removeAttribute('aria-current');
     });
     if ($('btnEditRaw')) $('btnEditRaw').hidden = name !== 'optimize' || !S.base;
+    // 「简历优化」与编辑器一样专注：左上角给返回键，不再显示左侧功能栏
+    var back = $('workBack');
+    if (back) back.hidden = name !== 'optimize';
   }
 
   /** 激活一个功能视图（负责 is-active / 顶栏 / 左栏高亮） */
   function activate(name) {
     var meta = VIEW_META[name] || VIEW_META.resume;
     document.body.classList.toggle('is-editor', name === 'editor');
+    document.body.classList.toggle('is-optimize', name === 'optimize');
     Array.prototype.forEach.call(document.querySelectorAll('.view'), function (v) {
       v.classList.toggle('is-active', v.id === meta.view);
     });
@@ -305,6 +312,14 @@
     activate('interview');
     if (window.Interview) window.Interview.enter();
     markRoute('interview', 1);
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+
+  /** 面试总结（错题本）：模拟面试里没答上来的题 */
+  function showReview() {
+    activate('review');
+    if (window.InterviewReview) window.InterviewReview.render();
+    markRoute('review', 1);
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
@@ -1377,6 +1392,7 @@
       }
       if (name === 'settings') { showSettings(); return; }
       if (name === 'interview') { showInterview(); return; }
+      if (name === 'review') { showReview(); return; }
     });
   }
 
@@ -1391,6 +1407,10 @@
 
   function bind() {
     bindNav();
+
+    // 优化台左上角返回简历库（与编辑器里的返回键一致：不堆重复的历史记录）
+    var wb = $('workBack');
+    if (wb) wb.addEventListener('click', function () { showUpload('replace'); });
     // 上传（简历库与优化台共用这两个隐藏输入）
     ['resume', 'jd'].forEach(function (kind) {
       var drop = kind === 'resume' ? $('dropResume') : $('dropJd');
@@ -1737,6 +1757,7 @@
       showWork: showWork,
       showSettings: showSettings,
       showInterview: showInterview,
+      showReview: showReview,
       activateView: activate,
       syncView: syncChrome,
       syncUploadState: syncUploadState,
