@@ -191,7 +191,7 @@
   }
   function themeFromTemplate(id) {
     var t = template(id);
-    return { accent: t.accent, font: t.font, density: t.density, nameSize: t.nameSize };
+    return { accent: t.accent, font: t.font, density: t.density, nameSize: t.nameSize, photoSize: t.photoSize || 100 };
   }
   function renderTemplate(id, theme) {
     var t = template(id);
@@ -200,7 +200,8 @@
       accent: (theme && theme.accent) || t.accent,
       font: (theme && theme.font) || t.font,
       density: theme && theme.density != null ? theme.density : t.density,
-      nameSize: (theme && theme.nameSize) || t.nameSize
+      nameSize: (theme && theme.nameSize) || t.nameSize,
+      photoSize: (theme && theme.photoSize) || t.photoSize || 100
     };
   }
 
@@ -284,6 +285,7 @@
     doc.theme.font = doc.theme.font || t.font;
     doc.theme.density = doc.theme.density == null ? t.density : +doc.theme.density;
     doc.theme.nameSize = doc.theme.nameSize == null ? t.nameSize : +doc.theme.nameSize;
+    doc.theme.photoSize = doc.theme.photoSize == null ? (t.photoSize || 100) : +doc.theme.photoSize;
     doc.model = normalizeModel(doc.model);
     doc.createdAt = doc.createdAt || now();
     doc.updatedAt = doc.updatedAt || doc.createdAt;

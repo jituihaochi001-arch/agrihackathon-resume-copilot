@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111'/%3E%3Ctext x='32' y='44' font-family='PingFang SC,Microsoft YaHei,sans-serif' font-size='30' font-weight='700' fill='%23fff' text-anchor='middle'%3E%E8%81%8C%3C/text%3E%3C/svg%3E" />
 <title>求职助手 · 简历优化与模拟面试工作台</title>
-<link rel="stylesheet" href="styles.css?20261122h" />
+<link rel="stylesheet" href="styles.css?20261122i" />
 </head>
 <body data-section="resume">
 
@@ -159,7 +159,14 @@
     <div class="ed-top">
       <div class="ed-top-left">
         <button class="text-btn ed-back" type="button" id="edBack" title="返回我的简历">← 返回简历库</button>
-        <input class="ed-title-input" id="edTitle" type="text" maxlength="40" placeholder="未命名简历" />
+        <span class="ed-top-div" aria-hidden="true"></span>
+        <label class="ed-title" for="edTitle">
+          <span class="ed-title-kicker">简历名 · 点击可修改</span>
+          <span class="ed-title-row">
+            <input class="ed-title-input" id="edTitle" type="text" maxlength="40" placeholder="未命名简历" title="点击修改简历名" />
+            <span class="ed-title-pen" aria-hidden="true">✎</span>
+          </span>
+        </label>
         <span class="ed-status" id="edStatus">已保存</span>
       </div>
       <div class="ed-top-actions">
@@ -173,7 +180,7 @@
     <div class="ed-body">
       <aside class="ed-col ed-col-nav">
         <div class="ed-sec-head">
-          <span class="ed-col-title">模块</span>
+          <span class="ed-col-title" title="按住任意模块上下拖动，即可调整顺序">模块 · 可拖动排序</span>
           <span class="ed-sec-acts">
             <button class="text-btn ed-style-toggle" type="button" id="edStyleToggle">版式</button>
             <button class="text-btn" type="button" id="edAddSec">＋ 添加</button>
@@ -197,6 +204,8 @@
             <input type="range" id="edDensity" min="20" max="90" step="2" /></label>
           <label class="ed-field"><span>姓名字号 <em id="edNameSizeVal">26pt</em></span>
             <input type="range" id="edNameSize" min="18" max="40" step="1" /></label>
+          <label class="ed-field"><span>头像大小 <em id="edPhotoSizeVal">100%</em></span>
+            <input type="range" id="edPhotoSize" min="60" max="170" step="5" /></label>
         </div>
       </aside>
 
@@ -846,33 +855,33 @@
 <input type="file" id="edPhotoInput" accept="image/*" hidden />
 <div id="printRoot" class="print-root"></div>
 
-<script src="js/env.js?20261122h"></script>
-<script src="js/zip.js?20261122h"></script>
-<script src="js/pdflayout.js?20261122h"></script>
-<script src="js/pdfpaint.js?20261122h"></script>
-<script src="js/paintdoc.js?20261122h"></script>
-<script src="js/layoutdoc.js?20261122h"></script>
-<script src="js/parse.js?20261122h"></script>
-<script src="js/model.js?20261122h"></script>
-<script src="js/jd.js?20261122h"></script>
-<script src="js/suggest.js?20261122h"></script>
-<script src="js/render.js?20261122h"></script>
-<script src="js/templates.js?20261122h"></script>
-<script src="js/onepage.js?20261122h"></script>
-<script src="js/docx.js?20261122h"></script>
-<script src="js/docxlayout.js?20261122h"></script>
-<script src="js/inplace.js?20261122h"></script>
-<script src="js/ttfs.js?20261122h"></script>
-<script src="js/pdfwrite.js?20261122h"></script>
-<script src="js/raster.js?20261122h"></script>
-<script src="js/sample.js?20261122h"></script>
-<script src="js/splitter.js?20261122h"></script>
-<script src="js/library.js?20261122h"></script>
-<script src="js/editor.js?20261122h"></script>
-<script src="js/app.js?20261122h"></script>
-<script src="js/brandicons.js?20261122h"></script>
-<script src="js/ai.js?20261122h"></script>
-<script src="js/aipolish.js?20261122h"></script>
-<script src="js/interview.js?20261122h"></script>
+<script src="js/env.js?20261122i"></script>
+<script src="js/zip.js?20261122i"></script>
+<script src="js/pdflayout.js?20261122i"></script>
+<script src="js/pdfpaint.js?20261122i"></script>
+<script src="js/paintdoc.js?20261122i"></script>
+<script src="js/layoutdoc.js?20261122i"></script>
+<script src="js/parse.js?20261122i"></script>
+<script src="js/model.js?20261122i"></script>
+<script src="js/jd.js?20261122i"></script>
+<script src="js/suggest.js?20261122i"></script>
+<script src="js/render.js?20261122i"></script>
+<script src="js/templates.js?20261122i"></script>
+<script src="js/onepage.js?20261122i"></script>
+<script src="js/docx.js?20261122i"></script>
+<script src="js/docxlayout.js?20261122i"></script>
+<script src="js/inplace.js?20261122i"></script>
+<script src="js/ttfs.js?20261122i"></script>
+<script src="js/pdfwrite.js?20261122i"></script>
+<script src="js/raster.js?20261122i"></script>
+<script src="js/sample.js?20261122i"></script>
+<script src="js/splitter.js?20261122i"></script>
+<script src="js/library.js?20261122i"></script>
+<script src="js/editor.js?20261122i"></script>
+<script src="js/app.js?20261122i"></script>
+<script src="js/brandicons.js?20261122i"></script>
+<script src="js/ai.js?20261122i"></script>
+<script src="js/aipolish.js?20261122i"></script>
+<script src="js/interview.js?20261122i"></script>
 </body>
 </html>

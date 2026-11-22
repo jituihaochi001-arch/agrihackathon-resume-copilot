@@ -424,7 +424,10 @@
 
     if (fmt === 'docx') {
       var tpl = lib.template(doc.template);
-      var blob = window.ResumeDocx.build(model, { style: tpl.base, photo: !!model.photo, fit: 0 });
+      var blob = window.ResumeDocx.build(model, {
+        style: tpl.base, photo: !!model.photo, fit: 0,
+        photoScale: ((doc.theme && doc.theme.photoSize) || 100) / 100
+      });
       window.ResumeRender.download(name + '.docx', blob);
       closeOverlay('exportOverlay');
       toast('已生成 DOCX，正在下载');

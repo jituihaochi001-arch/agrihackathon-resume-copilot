@@ -9,7 +9,7 @@
   var dirty = false;
   var undoStack = [];
   var redoStack = [];
-  var lastSnap = '';
+  var pendingSnap = null;
   var bound = false;
 
   var PRESETS = [
@@ -93,15 +93,20 @@
     });
   }
 
-  function pushHistory() {
-    if (!doc) return;
-    var snap = snapshot();
-    if (snap === lastSnap) return;
-    if (lastSnap) undoStack.push(lastSnap);
-    lastSnap = snap;
+  function pushSnap(snap) {
+    if (!snap) return;
+    // 和栈顶相同就不重复记
+    if (undoStack.length && undoStack[undoStack.length - 1] === snap) return;
+    undoStack.push(snap);
     if (undoStack.length > 60) undoStack.shift();
     redoStack = [];
     syncUndo();
+  }
+
+  function pushHistory() {
+    if (!doc) return;
+    pendingSnap = null;
+    pushSnap(snapshot());
   }
 
   function restoreSnap(snap) {
@@ -110,14 +115,12 @@
     doc.template = d.template;
     doc.theme = d.theme;
     doc.model = d.model;
-    lastSnap = snapshot();
     renderAll();
     markDirty();
   }
 
   function undo() {
     if (!undoStack.length) return;
-    pushHistory();
     var prev = undoStack.pop();
     redoStack.push(snapshot());
     restoreSnap(prev);
@@ -185,19 +188,21 @@
       box.innerHTML = '<li class="ed-sec-empty">还没有模块，点右上角「添加」开始。</li>';
       return;
     }
-    list.forEach(function (s, i) {
+    list.forEach(function (s) {
       var li = document.createElement('li');
       li.className = 'ed-sec-item' + (s.visible === false ? ' is-off' : '');
       li.dataset.uid = s.uid;
+      li.draggable = true;
+      li.tabIndex = 0;
+      li.title = '按住拖动可调整顺序；选中后也可按 ↑ ↓ 键移动';
       var count = s.mode === 'entries' ? (s.items || []).length
         : s.mode === 'chips' ? (s.chips || []).length
         : (s.text ? 1 : 0);
       li.innerHTML =
+        '<span class="ed-sec-grip" aria-hidden="true">⠿</span>' +
         '<button type="button" class="ed-mini ed-eye" data-act="vis" title="' + (s.visible === false ? '显示' : '隐藏') + '">' + (s.visible === false ? '○' : '●') + '</button>' +
         '<span class="ed-sec-name">' + esc(s.heading) + '</span>' +
-        '<span class="ed-sec-count">' + (count ? count : '') + '</span>' +
-        '<button type="button" class="ed-mini" data-act="up" title="上移" ' + (i === 0 ? 'disabled' : '') + '>↑</button>' +
-        '<button type="button" class="ed-mini" data-act="down" title="下移" ' + (i === list.length - 1 ? 'disabled' : '') + '>↓</button>';
+        '<span class="ed-sec-count">' + (count ? count : '') + '</span>';
       box.appendChild(li);
     });
   }
@@ -266,8 +271,6 @@
       '<div class="ed-card-head">' +
         '<input class="ed-card-title-input" type="text" data-sf="heading" value="' + esc(s.heading) + '" maxlength="16" title="模块标题" />' +
         '<div class="ed-card-tools">' +
-          '<button type="button" class="ed-mini" data-act="sec-up" title="上移">↑</button>' +
-          '<button type="button" class="ed-mini" data-act="sec-down" title="下移">↓</button>' +
           '<button type="button" class="text-btn is-danger" data-act="sec-del">删除</button>' +
         '</div>' +
       '</div>' +
@@ -376,6 +379,8 @@
     if (density) density.value = doc.theme.density;
     var nameSize = $('edNameSize');
     if (nameSize) nameSize.value = doc.theme.nameSize;
+    var photoSize = $('edPhotoSize');
+    if (photoSize) photoSize.value = doc.theme.photoSize == null ? 100 : doc.theme.photoSize;
     syncRangeLabels();
   }
 
@@ -384,6 +389,8 @@
     if (d) d.textContent = doc.theme.density < 34 ? '紧凑' : (doc.theme.density > 66 ? '宽松' : '标准');
     var n = $('edNameSizeVal');
     if (n) n.textContent = doc.theme.nameSize + 'pt';
+    var p = $('edPhotoSizeVal');
+    if (p) p.textContent = (doc.theme.photoSize == null ? 100 : doc.theme.photoSize) + '%';
   }
 
   /* ---------------- 操作 ---------------- */
@@ -409,19 +416,22 @@
     if (card) card.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
 
-  function moveSection(uid, dir) {
-    pushHistory();
+  /** 拖动结束后按 DOM 顺序写回模块顺序；顺序没变就不记历史 */
+  function applySectionOrder(order) {
     var list = sections();
-    var i = -1;
-    for (var k = 0; k < list.length; k++) if (list[k].uid === uid) i = k;
-    if (i < 0) return;
-    var j = i + dir;
-    if (j < 0 || j >= list.length) return;
-    var tmp = list[i]; list[i] = list[j]; list[j] = tmp;
-    // 注意：不能调用 renumber()——它内部会按旧的 order 重新排序，
-    // 把刚交换的数组顺序还原。这里直接按新顺序重排 order。
-    list.forEach(function (s, idx) { s.order = idx; });
-    doc.model.sections = list;
+    var byUid = {};
+    list.forEach(function (s) { byUid[s.uid] = s; });
+    var next = [];
+    (order || []).forEach(function (uid) {
+      if (byUid[uid]) { next.push(byUid[uid]); delete byUid[uid]; }
+    });
+    list.forEach(function (s) { if (byUid[s.uid]) next.push(s); });
+    var changed = next.length !== list.length || next.some(function (s, i) { return s !== list[i]; });
+    if (!changed) return;
+    pushHistory();
+    // 不能调用 renumber()：它内部按旧的 order 重排，会把新顺序还原。
+    next.forEach(function (s, idx) { s.order = idx; });
+    doc.model.sections = next;
     renderSecList();
     renderForm();
     renderPreview();
@@ -676,10 +686,14 @@
     });
 
     var title = $('edTitle');
-    if (title) title.addEventListener('input', function () {
-      doc.title = title.value;
-      markDirty();
-    });
+    if (title) {
+      title.addEventListener('focus', function () { pendingSnap = snapshot(); });
+      title.addEventListener('input', function () {
+        if (pendingSnap) { pushSnap(pendingSnap); pendingSnap = null; }
+        doc.title = title.value;
+        markDirty();
+      });
+    }
 
     var un = $('edUndo'), re = $('edRedo');
     if (un) un.addEventListener('click', undo);
@@ -718,28 +732,89 @@
     }
 
     var list = $('edSecList');
-    if (list) list.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-act]');
-      if (!b) return;
-      var li = b.closest('.ed-sec-item');
-      if (!li) return;
-      var uid = li.dataset.uid;
-      var act = b.dataset.act;
-      if (act === 'vis') toggleSection(uid);
-      else if (act === 'up') moveSection(uid, -1);
-      else if (act === 'down') moveSection(uid, 1);
-    });
+    if (list) {
+      list.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-act]');
+        if (!b) return;
+        var li = b.closest('.ed-sec-item');
+        if (!li) return;
+        if (b.dataset.act === 'vis') toggleSection(li.dataset.uid);
+      });
+
+      // 模块排序：整行可以直接拖动，按钮区域不触发拖动
+      var dragUid = null;
+      var dragArmed = false;
+      list.addEventListener('pointerdown', function (e) {
+        var li = e.target.closest('.ed-sec-item');
+        dragArmed = !!li && !e.target.closest('button, input, a');
+      });
+      list.addEventListener('dragstart', function (e) {
+        var li = e.target.closest('.ed-sec-item');
+        if (!li || !dragArmed) { e.preventDefault(); return; }
+        dragUid = li.dataset.uid;
+        li.classList.add('is-dragging');
+        if (e.dataTransfer) {
+          e.dataTransfer.effectAllowed = 'move';
+          try { e.dataTransfer.setData('text/plain', dragUid); } catch (err) { /* 忽略 */ }
+        }
+      });
+      list.addEventListener('dragover', function (e) {
+        if (!dragUid) return;
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        var dragged = list.querySelector('.ed-sec-item.is-dragging');
+        if (!dragged) return;
+        var over = e.target.closest('.ed-sec-item');
+        if (!over || over === dragged) return;
+        var horizontal = getComputedStyle(list).flexDirection.indexOf('row') === 0;
+        var r = over.getBoundingClientRect();
+        var after = horizontal
+          ? e.clientX > r.left + r.width / 2
+          : e.clientY > r.top + r.height / 2;
+        list.insertBefore(dragged, after ? over.nextSibling : over);
+      });
+      list.addEventListener('drop', function (e) { if (dragUid) e.preventDefault(); });
+      list.addEventListener('dragend', function () {
+        var uid = dragUid;
+        dragUid = null;
+        dragArmed = false;
+        var dragged = list.querySelector('.ed-sec-item.is-dragging');
+        if (dragged) dragged.classList.remove('is-dragging');
+        if (!uid) return;
+        applySectionOrder(Array.prototype.map.call(
+          list.querySelectorAll('.ed-sec-item'),
+          function (x) { return x.dataset.uid; }
+        ));
+      });
+      // 键盘也能排序：选中模块后按 ↑ / ↓
+      list.addEventListener('keydown', function (e) {
+        if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+        var li = e.target.closest('.ed-sec-item');
+        if (!li || e.target.closest('button, input')) return;
+        var items = Array.prototype.slice.call(list.querySelectorAll('.ed-sec-item'));
+        var i = items.indexOf(li);
+        var j = i + (e.key === 'ArrowUp' ? -1 : 1);
+        if (i < 0 || j < 0 || j >= items.length) return;
+        e.preventDefault();
+        var order = items.map(function (x) { return x.dataset.uid; });
+        var tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+        applySectionOrder(order);
+        var again = list.querySelector('.ed-sec-item[data-uid="' + li.dataset.uid + '"]');
+        if (again) again.focus();
+      });
+    }
 
     var form = $('edForm');
     if (!form) return;
 
     form.addEventListener('focusin', function (e) {
-      if (e.target.matches('input, textarea, select')) pushHistory();
+      if (e.target.matches('input, textarea, select')) pendingSnap = snapshot();
     });
 
     form.addEventListener('input', function (e) {
       var t = e.target;
       if (!doc) return;
+      if (pendingSnap) { pushSnap(pendingSnap); pendingSnap = null; }
       if (t.dataset.bf) {
         doc.model[t.dataset.bf] = t.value;
       } else if (t.dataset.bc) {
@@ -821,9 +896,7 @@
       if (!uid || uid === '__basics') return;
       var s = sectionByUid(uid);
       if (!s) return;
-      if (act === 'sec-up') moveSection(uid, -1);
-      else if (act === 'sec-down') moveSection(uid, 1);
-      else if (act === 'sec-del') deleteSection(uid);
+      if (act === 'sec-del') deleteSection(uid);
       else if (act === 'item-add') addItem(s);
       else if (act === 'item-del' || act === 'item-up' || act === 'item-down') {
         var itemEl = b.closest('[data-item]');
@@ -878,12 +951,13 @@
       renderPreview();
       markDirty();
     });
-    ['edDensity', 'edNameSize'].forEach(function (id) {
+    ['edDensity', 'edNameSize', 'edPhotoSize'].forEach(function (id) {
       var el = $(id);
       if (!el) return;
       el.addEventListener('input', function () {
         if (id === 'edDensity') doc.theme.density = +el.value;
-        else doc.theme.nameSize = +el.value;
+        else if (id === 'edNameSize') doc.theme.nameSize = +el.value;
+        else doc.theme.photoSize = +el.value;
         syncRangeLabels();
         renderPreview();
         markDirty();
@@ -1011,7 +1085,7 @@
     doc = d;
     undoStack = [];
     redoStack = [];
-    lastSnap = snapshot();
+    pendingSnap = null;
     dirty = false;
     zoom = 1;
     renderAll();

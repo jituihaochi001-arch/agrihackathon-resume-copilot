@@ -65,24 +65,27 @@
 
   var PHOTO_W = 900000;   // 25mm
   var PHOTO_H = 1260000;  // 35mm
+  var PHOTO_K = 1;        // 头像大小倍率（编辑器「头像大小」）
 
   function drawing(rid, name) {
+    var w = Math.round(PHOTO_W * PHOTO_K);
+    var h = Math.round(PHOTO_H * PHOTO_K);
     return '<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0">' +
-      '<wp:extent cx="' + PHOTO_W + '" cy="' + PHOTO_H + '"/>' +
+      '<wp:extent cx="' + w + '" cy="' + h + '"/>' +
       '<wp:effectExtent l="0" t="0" r="0" b="0"/>' +
       '<wp:docPr id="101" name="' + name + '" descr="证件照"/>' +
       '<wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr>' +
       '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
       '<pic:pic><pic:nvPicPr><pic:cNvPr id="101" name="' + name + '"/><pic:cNvPicPr/></pic:nvPicPr>' +
       '<pic:blipFill><a:blip r:embed="' + rid + '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>' +
-      '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + PHOTO_W + '" cy="' + PHOTO_H + '"/></a:xfrm>' +
+      '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + w + '" cy="' + h + '"/></a:xfrm>' +
       '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic>' +
       '</a:graphicData></a:graphic></wp:inline></w:drawing></w:r>';
   }
 
   /** 抬头区：左侧信息 / 右侧照片，无边框两栏表 */
   function headTable(leftXml, photoName) {
-    var rightW = 2000;
+    var rightW = Math.round(2000 * Math.max(1, PHOTO_K));
     var leftW = CONTENT_W - rightW;
     var noBorder = '<w:tblBorders><w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>' +
       '<w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>' +
@@ -128,6 +131,7 @@
     SIZE = fit.z;
     var p = PRESET[opts.style] || PRESET.swiss;
     var body = [];
+    PHOTO_K = Math.min(1.7, Math.max(0.6, (Number(opts.photoScale) || 1)));
 
     var photo = (opts.photo !== undefined ? opts.photo : !!model.photo) ? photoFile(model.photo) : null;
     var photoName = photo ? ('photo.' + photo.ext) : '';

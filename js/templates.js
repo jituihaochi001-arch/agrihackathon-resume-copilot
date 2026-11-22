@@ -59,6 +59,7 @@
       accent: t.accent || INK, font: t.font || 'sans',
       density: t.density == null ? 50 : t.density,
       nameSize: t.nameSize || 26,
+      photoSize: t.photoSize || 100,
     };
   }
 
@@ -86,6 +87,7 @@
     paper.style.setProperty('--t-line', (1.46 + d * 0.0038).toFixed(3));
     paper.style.setProperty('--t-name-font', FONTS[t.font] || FONTS.sans);
     paper.style.setProperty('--t-name-size', (t.nameSize || 26) + 'pt');
+    paper.style.setProperty('--t-photo-scale', (Number(t.photoSize) || 100) / 100);
     if (t.sec) paper.setAttribute('data-sec', t.sec);
   }
 
@@ -295,6 +297,7 @@
       font: $('tplFont').value,
       density: Number($('tplDensity').value),
       nameSize: Number($('tplNameSize').value),
+      photoSize: (editing && editing.photoSize) || 100,
     };
   }
 
