@@ -4327,6 +4327,7 @@ html.is-ed-splitting * { cursor: col-resize !important; user-select: none !impor
   .ed-style .ed-col-title { grid-column: 1 / -1; }
   .ed-add-pop { position: static; width: 100%; margin-bottom: 8px; }
   .view-editor { height: auto; overflow: visible; }
+  body.is-editor .view-editor { height: auto; min-height: 0; }
   .ed-col-form { overflow: visible; }
   .ed-preview-scroll { position: absolute; }
 }
