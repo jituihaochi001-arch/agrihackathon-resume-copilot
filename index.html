@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111'/%3E%3Ctext x='32' y='44' font-family='PingFang SC,Microsoft YaHei,sans-serif' font-size='30' font-weight='700' fill='%23fff' text-anchor='middle'%3E%E8%81%8C%3C/text%3E%3C/svg%3E" />
 <title>求职助手 · 简历优化与模拟面试工作台</title>
-<link rel="stylesheet" href="styles.css?20261122g" />
+<link rel="stylesheet" href="styles.css?20261122h" />
 </head>
 <body data-section="resume">
 
@@ -88,7 +88,6 @@
       </nav>
       <div class="topbar-actions">
         <button class="text-btn" id="btnEditRaw" hidden>编辑原文</button>
-        <button class="text-btn" id="btnReset" hidden>重新开始</button>
       </div>
     </header>
 
@@ -159,7 +158,7 @@
   <section class="view view-editor" id="viewEditor">
     <div class="ed-top">
       <div class="ed-top-left">
-        <button class="text-btn ed-back" type="button" id="edBack">← 简历库</button>
+        <button class="text-btn ed-back" type="button" id="edBack" title="返回我的简历">← 返回简历库</button>
         <input class="ed-title-input" id="edTitle" type="text" maxlength="40" placeholder="未命名简历" />
         <span class="ed-status" id="edStatus">已保存</span>
       </div>
@@ -429,8 +428,11 @@
                 <span class="field-label">可用模型 <em id="aiModelState">尚未获取</em></span>
                 <button class="line-btn small" id="aiFetchModels" type="button">获取模型列表</button>
               </div>
-              <input id="aiModel" class="ai-model-input" type="text" list="aiModelList" placeholder="模型名，例如 deepseek-chat" spellcheck="false">
-              <datalist id="aiModelList"></datalist>
+              <div class="ai-model-box" id="aiModelBox">
+                <input id="aiModel" class="ai-model-input" type="text" placeholder="模型名，例如 deepseek-chat" spellcheck="false" autocomplete="off" aria-haspopup="listbox" aria-controls="aiModelMenu">
+                <button class="ai-model-toggle" type="button" id="aiModelToggle" title="展开全部模型" aria-label="展开全部模型">▾</button>
+                <div class="ai-model-menu" id="aiModelMenu" role="listbox" hidden></div>
+              </div>
               <p class="ai-note" id="aiModelNote">填好 Key 后点「获取模型列表」，也可以直接手填模型名。</p>
 
               <div class="ai-params">
@@ -844,33 +846,33 @@
 <input type="file" id="edPhotoInput" accept="image/*" hidden />
 <div id="printRoot" class="print-root"></div>
 
-<script src="js/env.js?20261122g"></script>
-<script src="js/zip.js?20261122g"></script>
-<script src="js/pdflayout.js?20261122g"></script>
-<script src="js/pdfpaint.js?20261122g"></script>
-<script src="js/paintdoc.js?20261122g"></script>
-<script src="js/layoutdoc.js?20261122g"></script>
-<script src="js/parse.js?20261122g"></script>
-<script src="js/model.js?20261122g"></script>
-<script src="js/jd.js?20261122g"></script>
-<script src="js/suggest.js?20261122g"></script>
-<script src="js/render.js?20261122g"></script>
-<script src="js/templates.js?20261122g"></script>
-<script src="js/onepage.js?20261122g"></script>
-<script src="js/docx.js?20261122g"></script>
-<script src="js/docxlayout.js?20261122g"></script>
-<script src="js/inplace.js?20261122g"></script>
-<script src="js/ttfs.js?20261122g"></script>
-<script src="js/pdfwrite.js?20261122g"></script>
-<script src="js/raster.js?20261122g"></script>
-<script src="js/sample.js?20261122g"></script>
-<script src="js/splitter.js?20261122g"></script>
-<script src="js/library.js?20261122g"></script>
-<script src="js/editor.js?20261122g"></script>
-<script src="js/app.js?20261122g"></script>
-<script src="js/brandicons.js?20261122g"></script>
-<script src="js/ai.js?20261122g"></script>
-<script src="js/aipolish.js?20261122g"></script>
-<script src="js/interview.js?20261122g"></script>
+<script src="js/env.js?20261122h"></script>
+<script src="js/zip.js?20261122h"></script>
+<script src="js/pdflayout.js?20261122h"></script>
+<script src="js/pdfpaint.js?20261122h"></script>
+<script src="js/paintdoc.js?20261122h"></script>
+<script src="js/layoutdoc.js?20261122h"></script>
+<script src="js/parse.js?20261122h"></script>
+<script src="js/model.js?20261122h"></script>
+<script src="js/jd.js?20261122h"></script>
+<script src="js/suggest.js?20261122h"></script>
+<script src="js/render.js?20261122h"></script>
+<script src="js/templates.js?20261122h"></script>
+<script src="js/onepage.js?20261122h"></script>
+<script src="js/docx.js?20261122h"></script>
+<script src="js/docxlayout.js?20261122h"></script>
+<script src="js/inplace.js?20261122h"></script>
+<script src="js/ttfs.js?20261122h"></script>
+<script src="js/pdfwrite.js?20261122h"></script>
+<script src="js/raster.js?20261122h"></script>
+<script src="js/sample.js?20261122h"></script>
+<script src="js/splitter.js?20261122h"></script>
+<script src="js/library.js?20261122h"></script>
+<script src="js/editor.js?20261122h"></script>
+<script src="js/app.js?20261122h"></script>
+<script src="js/brandicons.js?20261122h"></script>
+<script src="js/ai.js?20261122h"></script>
+<script src="js/aipolish.js?20261122h"></script>
+<script src="js/interview.js?20261122h"></script>
 </body>
 </html>

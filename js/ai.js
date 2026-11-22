@@ -522,15 +522,112 @@
   }
 
   function fillModelOptions() {
-    var dl = $('aiModelList');
-    if (!dl) return;
+    var menu = $('aiModelMenu');
+    if (!menu) return;
     var list = modelLists[curId()] || [];
-    dl.innerHTML = '';
-    list.forEach(function (id) {
-      var o = document.createElement('option');
-      o.value = id;
-      dl.appendChild(o);
+    menu.innerHTML = '';
+    if (!list.length) {
+      menu.hidden = true;
+      return;
+    }
+
+    var mi = $('aiModel');
+    var val = (mi && mi.value.trim()) || '';
+    // 输入框里已经是列表中的某个模型时，仍然展示全部模型（方便换一个）；
+    // 只有用户手动输入了非完整模型名时才按子串过滤。
+    var exact = list.indexOf(val) >= 0;
+    var q = val.toLowerCase();
+    var shown = (!val || exact) ? list : list.filter(function (id) {
+      return String(id).toLowerCase().indexOf(q) >= 0;
     });
+
+    var head = document.createElement('div');
+    head.className = 'ai-model-menu-head';
+    head.textContent = list.length + ' 个可选' + (shown.length !== list.length ? ' · 匹配 ' + shown.length : '');
+    menu.appendChild(head);
+
+    if (!shown.length) {
+      var empty = document.createElement('div');
+      empty.className = 'ai-model-menu-empty';
+      empty.textContent = '没有匹配的模型，可以直接手填';
+      menu.appendChild(empty);
+      return;
+    }
+
+    shown.forEach(function (id) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ai-model-opt' + (id === val ? ' is-on' : '');
+      b.setAttribute('role', 'option');
+      b.setAttribute('aria-selected', id === val ? 'true' : 'false');
+      b.title = id;
+      b.textContent = id;
+      b.addEventListener('click', function () { pickModel(id); });
+      menu.appendChild(b);
+    });
+  }
+
+  function pickModel(id) {
+    var mi = $('aiModel');
+    if (mi) mi.value = id;
+    var st = $('aiModelState');
+    if (st) st.textContent = '已选 ' + id;
+    fillModelOptions();
+    closeModelMenu();
+    setHint('已选择模型「' + id + '」，点右下角「保存并使用」生效。', false);
+  }
+
+  function openModelMenu() {
+    var menu = $('aiModelMenu');
+    if (!menu) return;
+    var list = modelLists[curId()] || [];
+    if (!list.length) {
+      // 已经有 Key 时，直接帮用户拉一次列表
+      var spec = draftLlm();
+      if (spec) { fetchModels(true, true); setHint('正在获取模型列表…', false); }
+      else setHint('先填接口地址和 API Key，再展开模型列表。', true);
+      return;
+    }
+    fillModelOptions();
+    menu.hidden = false;
+    placeModelMenu();
+    var on = menu.querySelector('.ai-model-opt.is-on');
+    if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest' });
+  }
+
+  /** 设置面板内部可滚动，菜单用 fixed 定位贴住输入框，避免被面板裁掉 */
+  function placeModelMenu() {
+    var menu = $('aiModelMenu');
+    var mi = $('aiModel');
+    if (!menu || !mi || menu.hidden) return;
+    var r = mi.getBoundingClientRect();
+    var winH = window.innerHeight || document.documentElement.clientHeight;
+    var below = winH - r.bottom - 14;
+    var above = r.top - 14;
+    var openUp = below < 220 && above > below;
+    var maxH = Math.max(120, Math.min(264, openUp ? above : below));
+    menu.style.position = 'fixed';
+    menu.style.left = Math.round(r.left) + 'px';
+    menu.style.width = Math.round(r.width) + 'px';
+    menu.style.maxHeight = Math.round(maxH) + 'px';
+    menu.style.zIndex = '9999';
+    if (openUp) {
+      menu.style.top = 'auto';
+      menu.style.bottom = Math.round(winH - r.top + 6) + 'px';
+    } else {
+      menu.style.bottom = 'auto';
+      menu.style.top = Math.round(r.bottom + 6) + 'px';
+    }
+  }
+
+  function closeModelMenu() {
+    var menu = $('aiModelMenu');
+    if (menu) menu.hidden = true;
+  }
+
+  function modelMenuOpen() {
+    var menu = $('aiModelMenu');
+    return !!menu && !menu.hidden;
   }
 
   /** 切换服务商前先把当前输入暂存，避免来回切丢掉刚填的 Key */
@@ -567,7 +664,7 @@
     return { base: b, key: k, model: m };
   }
 
-  function fetchModels(silent) {
+  function fetchModels(silent, autoOpen) {
     var p = curProv();
     var st = $('aiModelState');
     var btn = $('aiFetchModels');
@@ -592,6 +689,7 @@
       if (mi) mi.value = pick;
       if (st) st.textContent = list.length + ' 个可选';
       fillModelOptions();
+      if (autoOpen) openModelMenu();
     }, function (e) {
       if (btn) btn.disabled = false;
       if (st) st.textContent = '获取失败';
@@ -748,6 +846,39 @@
   };
 
   window.AI = AI;
+
+  /** 模型下拉：自定义菜单（原生 datalist 会按输入框内容过滤，导致只显示一个） */
+  function bindModelMenu() {
+    var mi = $('aiModel');
+    var tg = $('aiModelToggle');
+    if (mi) {
+      mi.addEventListener('focus', function () {
+        if ((modelLists[curId()] || []).length) openModelMenu();
+      });
+      mi.addEventListener('input', function () {
+        if (modelMenuOpen()) fillModelOptions();
+      });
+      mi.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeModelMenu();
+      });
+    }
+    if (tg) tg.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (modelMenuOpen()) closeModelMenu();
+      else openModelMenu();
+    });
+    document.addEventListener('click', function (e) {
+      var box = $('aiModelBox');
+      if (!box || !modelMenuOpen()) return;
+      if (!box.contains(e.target)) closeModelMenu();
+    });
+    document.addEventListener('scroll', placeModelMenu, true);
+    window.addEventListener('resize', placeModelMenu);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindModelMenu);
+  else bindModelMenu();
 })();
 
 /* ---------------- 设置面板（ai.js 自带 UI 绑定） ---------------- */

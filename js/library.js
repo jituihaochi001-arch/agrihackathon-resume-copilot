@@ -634,80 +634,68 @@
 
   /* ---------------- 模板画廊 ---------------- */
 
-  /** 新建简历的示例内容：按 Magic Resume 的演示简历改写为本地模型结构。
+  /** 新建简历的示例内容：沿用「张明」的数据分析师示例，
    *  模板画廊的缩略图与新简历正文共用这一份，保证「看到什么就得到什么」。 */
   function sampleModel() {
     if (sampleModel._cache) return sampleModel._cache;
     var summary = section('summary', '个人简介', 'para', 0);
-    summary.text = '5 年前端开发经验，负责大型内容平台的前端架构与性能优化；' +
-      '擅长 React / TypeScript、组件库建设与工程化提效，带过 5 人小组。';
+    summary.text = '3 年数据分析经验，负责用户增长与经营分析；擅长用 SQL / Python 完成取数与建模，' +
+      '独立负责过会员分层与 AB 实验，能把分析结论落成可执行的运营策略。';
 
     var exp = section('experience', '工作经历', 'entries', 1);
-    exp.items = [{
-      uid: uid('i'), org: '字节跳动', role: '高级前端工程师', degree: '', major: '', place: '',
-      meta: '2021.07 — 2024.12',
-      bullets: [
-        '负责抖音创作者平台的开发与维护，主导多个核心功能的技术方案设计',
-        '优化项目工程化配置，将构建时间从 8 分钟降到 2 分钟，提升团队开发效率',
-        '设计并实现组件库，代码复用率提升到 70%，显著减少重复开发',
-        '主导性能优化项目，首屏加载时间减少 50%，并接入 APM 监控体系'
-      ]
-    }];
-
-    var proj = section('project', '项目经历', 'entries', 2);
-    proj.items = [
+    exp.items = [
       {
-        uid: uid('i'), org: '抖音创作者中台', role: '前端负责人', degree: '', major: '', place: '',
-        meta: '2022.06 — 2023.12',
+        uid: uid('i'), org: '联和数字科技有限公司', role: '数据分析师', degree: '', major: '', place: '',
+        meta: '2020.07 — 至今',
         bullets: [
-          '基于 React 搭建创作者数据分析与内容管理平台，服务百万级创作者',
-          '使用 Redux 管理复杂数据流，保证多模块状态一致',
-          '实施代码分割与懒加载，优化大规模应用的加载性能'
+          '负责用户行为数据的日常提取与看板维护，支撑运营与产品团队的指标查询',
+          '参与增长活动的效果评估，输出活动复盘报告，沉淀可复用的分析模板',
+          '协助业务部门做月度经营分析，统一并维护核心指标的统计口径',
+          '输出用户分层名单，支持精细化运营，分层人群的复购率提升 12%'
         ]
       },
       {
-        uid: uid('i'), org: '微信小程序开发者工具', role: '核心开发者', degree: '', major: '', place: '',
-        meta: '2020.03 — 2021.06',
+        uid: uid('i'), org: '星图市场咨询', role: '数据分析实习生', degree: '', major: '', place: '',
+        meta: '2019.07 — 2019.12',
         bullets: [
-          '为开发者提供小程序开发、调试与发布的一站式解决方案',
-          '基于 Electron 构建 Windows / macOS / Linux 跨平台桌面应用'
-        ]
-      },
-      {
-        uid: uid('i'), org: '前端监控平台', role: '技术负责人', degree: '', major: '', place: '',
-        meta: '2021.09 — 2022.03',
-        bullets: [
-          '搭建覆盖错误监控、性能监控与用户行为分析的完整方案',
-          '沉淀告警规则与排障流程，线上问题平均处理时长下降 60%'
+          '参与问卷数据清洗与编码，整理样本结构与回收质量报告',
+          '协助撰写行业研究报告的部分章节，负责图表与数据核对'
         ]
       }
     ];
 
+    var proj = section('project', '项目经历', 'entries', 2);
+    proj.items = [{
+      uid: uid('i'), org: '会员复购提升项目', role: '分析负责人', degree: '', major: '', place: '',
+      meta: '2021.03 — 2021.09',
+      bullets: [
+        '搭建会员分层的标签体系，输出高价值、成长、沉睡三层人群定义',
+        '设计复购策略的 AB 实验并负责结果回收，验证优惠力度与触达时机的组合效果',
+        '输出项目复盘报告，将分层方法固化为标准分析流程，复购率提升 9%'
+      ]
+    }];
+
     var edu = section('education', '教育经历', 'entries', 3);
     edu.items = [{
-      uid: uid('i'), org: '北京大学', role: '', degree: '本科', major: '计算机科学与技术', place: '',
-      meta: '2013.09 — 2017.06',
+      uid: uid('i'), org: '华东理工大学', role: '', degree: '本科', major: '统计学', place: '',
+      meta: '2016.09 — 2020.06',
       bullets: [
-        '主修数据结构、算法设计、操作系统、计算机网络与 Web 开发',
-        '专业排名前 5%，连续三年获得一等奖学金'
+        '主修概率论与数理统计、多元统计分析、数据库原理、抽样调查',
+        '校级一等奖学金（2018）；CET-6'
       ]
     }];
 
     var skills = section('skills', '专业技能', 'chips', 4);
-    skills.chips = [
-      'React', 'Vue', 'TypeScript', 'Next.js', 'TailwindCSS', 'Vite',
-      'Node.js', '性能优化', '组件库', '团队管理'
-    ];
+    skills.chips = ['SQL', 'Python', 'Excel', 'Tableau', 'Hive', '统计学', 'AB 实验', '数据可视化'];
 
     sampleModel._cache = normalizeModel({
-      name: '宋哈娜',
-      intent: '高级前端工程师',
+      name: '张明',
+      intent: '数据分析师',
       photo: '',
       contact: [
-        { label: '电话', value: '13800138000' },
-        { label: '邮箱', value: 'zhangsan@example.com' },
-        { label: '城市', value: '北京市朝阳区' },
-        { label: '网站', value: 'https://zhangsan.dev' }
+        { label: '电话', value: '13800001111' },
+        { label: '邮箱', value: 'zhangming.ds@mail.com' },
+        { label: '城市', value: '上海' }
       ],
       sourceKind: '', unstructured: false,
       sections: [summary, exp, proj, edu, skills]
@@ -719,7 +707,7 @@
     var tpl = getTemplate(templateId) ? templateId : DEFAULT_TPL;
     return normalizeDoc({
       id: uid('doc'),
-      title: '宋哈娜的简历',
+      title: '张明的简历',
       template: tpl,
       theme: themeFromTemplate(tpl),
       model: clone(sampleModel()),

@@ -183,13 +183,13 @@
       if (on) b.setAttribute('aria-current', 'page');
       else b.removeAttribute('aria-current');
     });
-    if ($('btnReset')) $('btnReset').hidden = !S.base || name === 'settings' || name === 'editor';
     if ($('btnEditRaw')) $('btnEditRaw').hidden = name !== 'optimize' || !S.base;
   }
 
   /** 激活一个功能视图（负责 is-active / 顶栏 / 左栏高亮） */
   function activate(name) {
     var meta = VIEW_META[name] || VIEW_META.resume;
+    document.body.classList.toggle('is-editor', name === 'editor');
     Array.prototype.forEach.call(document.querySelectorAll('.view'), function (v) {
       v.classList.toggle('is-active', v.id === meta.view);
     });
@@ -1236,20 +1236,6 @@
     } catch (e) { return false; }
   }
 
-  function reset() {
-    try { localStorage.removeItem(STORE_KEY); } catch (e) {}
-    S.rawResume = ''; S.rawJd = ''; S.base = null; S.model = null;
-    S.suggestions = []; S.gaps = []; S.selected = Object.create(null); S.lastScore = 0;
-    S.photo = ''; S.srcBuf = null; S.srcKind = ''; S.mode = 'relayout';
-    S.srcB64 = ''; S.docId = '';
-    S.layout = null; S.layouts = null; S.flow = null; S.fit = 0;
-    if ($('fileResume')) $('fileResume').value = '';
-    if ($('fileJd')) $('fileJd').value = '';
-    activate('resume');
-    setStep(1);
-    syncUploadState();
-  }
-
   /**
    * 预览区风格切换的四个选项：
    *   swiss / classic / academic —— 三套预设模板（重新排版）
@@ -1507,9 +1493,6 @@
     }
     if ($('btnSample')) $('btnSample').addEventListener('click', loadSample);
     if ($('srcSample')) $('srcSample').addEventListener('click', loadSample);
-
-    // 重开
-    if ($('btnReset')) $('btnReset').addEventListener('click', reset);
 
     // 建议交互
     $('suggestList').addEventListener('click', function (e) {
