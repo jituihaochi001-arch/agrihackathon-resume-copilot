@@ -223,7 +223,8 @@ body {
   border-bottom: 1px solid var(--line);
 }
 
-.topbar-titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; grid-column: 1; }
+.topbar-titles { display: flex; flex-direction: row; align-items: center; gap: 14px; min-width: 0; grid-column: 1; }
+.topbar-heading { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .topbar-kicker {
   font-family: var(--f-mono);
   font-size: 10px;
@@ -4443,19 +4444,28 @@ html.is-ed-splitting * { cursor: col-resize !important; user-select: none !impor
 body.is-optimize .app-shell { grid-template-columns: minmax(0, 1fr); }
 body.is-optimize .sidebar { display: none; }
 
-.topbar-line { display: flex; align-items: center; gap: 10px; min-width: 0; }
+/* 优化台顶栏左侧：与编辑器一致——胶囊返回键 + 竖分隔线 + 说明/标题两行 */
 .topbar-back {
-  padding: 3px 11px;
+  flex: 0 0 auto;
+  padding: 7px 16px;
   border: 1px solid var(--line);
   border-radius: var(--r-pill);
   background: var(--paper);
-  font-size: 12.5px;
-  font-weight: 550;
-  line-height: 1.6;
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.5;
   white-space: nowrap;
 }
 .topbar-back:hover { background: var(--line-soft); border-color: var(--muted-2); color: var(--ink); }
 .topbar-back[hidden] { display: none; }
+.topbar-div {
+  flex: 0 0 auto;
+  width: 1px;
+  height: 32px;
+  background: var(--line);
+}
+.topbar-back[hidden] + .topbar-div { display: none; }
 
 /* 左侧「面试总结」待复习数量 */
 .side-badge {
