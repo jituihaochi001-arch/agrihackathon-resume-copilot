@@ -63,6 +63,8 @@ const MIME = {
   '.bcmap': 'application/octet-stream',
   '.pfb': 'application/octet-stream',
   '.wasm': 'application/wasm',
+  '.webm': 'video/webm',
+  '.mp4': 'video/mp4',
 };
 
 /** 文本类可以直接当字符串返回；其余走 base64 */
