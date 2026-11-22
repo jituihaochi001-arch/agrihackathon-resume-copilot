@@ -1,0 +1,10 @@
+{
+  "name": "rp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "简历精修 · CloudBase 云函数（静态资源 + 大模型代理）",
+  "main": "index.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

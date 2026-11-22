@@ -1,0 +1,9 @@
+{
+  "baseURL": "https://maas-api.antdigital.com/v1",
+  "apiKey": "REPLACE_WITH_YOUR_KEY",
+  "model": "ling-3.1-flash",
+  "temperature": 0.7,
+  "stream": true,
+  "maxTokens": 4096,
+  "port": 8765
+}

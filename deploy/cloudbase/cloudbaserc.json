@@ -1,0 +1,20 @@
+{
+  "envId": "YOUR_CLOUDBASE_ENV_ID",
+  "functionRoot": "./functions",
+  "functions": [
+    {
+      "name": "rp",
+      "timeout": 60,
+      "memorySize": 512,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": false,
+      "envVariables": {
+        "ACCESS_CODE": "REPLACE_WITH_YOUR_ACCESS_CODE",
+        "TEMPERATURE": "0.7",
+        "MAX_TOKENS": "4096",
+        "RP_SERVE_STATIC": "1"
+      }
+    }
+  ]
+}
